@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-type Screen = 'welcome' | 'amount' | 'payment' | 'processing' | 'success' | 'history';
+type Screen = 'welcome' | 'amount' | 'payment' | 'qr-scan' | 'processing' | 'success' | 'history';
 
 interface Transaction {
   id: string;
@@ -19,8 +19,35 @@ const Index = () => {
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const playSound = (type: 'click' | 'success' | 'error') => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    if (type === 'click') {
+      oscillator.frequency.value = 800;
+      gainNode.gain.value = 0.1;
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.05);
+    } else if (type === 'success') {
+      oscillator.frequency.value = 1000;
+      gainNode.gain.value = 0.15;
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.15);
+    } else if (type === 'error') {
+      oscillator.frequency.value = 300;
+      gainNode.gain.value = 0.15;
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.2);
+    }
+  };
+
   const handleNumberClick = (num: string) => {
     if (amount.length < 10) {
+      playSound('click');
       setAmount(amount + num);
     }
   };
@@ -34,7 +61,12 @@ const Index = () => {
   };
 
   const handlePayment = (method: string) => {
+    playSound('click');
     setPaymentMethod(method);
+    if (method === 'QR-код') {
+      setCurrentScreen('qr-scan');
+      return;
+    }
     setCurrentScreen('processing');
     
     setTimeout(() => {
@@ -72,14 +104,20 @@ const Index = () => {
       </p>
       <div className="flex flex-col gap-4 w-full max-w-md">
         <Button 
-          onClick={() => setCurrentScreen('amount')} 
+          onClick={() => {
+            playSound('click');
+            setCurrentScreen('amount');
+          }} 
           className="h-20 text-xl font-medium bg-primary hover:bg-primary/90"
         >
           <Icon name="CreditCard" size={28} className="mr-3" />
           Оплата картой
         </Button>
         <Button 
-          onClick={() => setCurrentScreen('amount')} 
+          onClick={() => {
+            playSound('click');
+            setCurrentScreen('amount');
+          }} 
           className="h-20 text-xl font-medium bg-primary hover:bg-primary/90"
           variant="outline"
         >
@@ -87,7 +125,10 @@ const Index = () => {
           Оплата по QR-коду
         </Button>
         <Button 
-          onClick={() => setCurrentScreen('history')} 
+          onClick={() => {
+            playSound('click');
+            setCurrentScreen('history');
+          }} 
           className="h-20 text-xl font-medium"
           variant="outline"
         >
@@ -149,7 +190,12 @@ const Index = () => {
       </div>
 
       <Button
-        onClick={() => amount && setCurrentScreen('payment')}
+        onClick={() => {
+          if (amount && parseFloat(amount) > 0) {
+            playSound('click');
+            setCurrentScreen('payment');
+          }
+        }}
         disabled={!amount || parseFloat(amount) <= 0}
         className="h-16 text-xl font-medium bg-primary hover:bg-primary/90"
       >
@@ -235,6 +281,109 @@ const Index = () => {
     </div>
   );
 
+  const QRScanScreen = () => {
+    const [scanning, setScanning] = useState(true);
+    const [scanProgress, setScanProgress] = useState(0);
+
+    useEffect(() => {
+      if (!scanning) return;
+      
+      const interval = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            playSound('success');
+            setTimeout(() => {
+              setScanning(false);
+              setCurrentScreen('processing');
+            }, 500);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 30);
+
+      return () => clearInterval(interval);
+    }, [scanning]);
+
+    return (
+      <div className="flex flex-col h-full animate-fade-in">
+        <div className="flex items-center justify-between mb-8">
+          <Button variant="ghost" onClick={() => setCurrentScreen('payment')} className="text-lg">
+            <Icon name="ArrowLeft" size={24} className="mr-2" />
+            Назад
+          </Button>
+          <h2 className="text-2xl font-bold">Сканирование QR-кода</h2>
+          <div className="w-24"></div>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="relative w-full max-w-md aspect-square bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl overflow-hidden mb-6">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.5)_100%)]"></div>
+            
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-64 h-64">
+                <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl"></div>
+                <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl"></div>
+                <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl"></div>
+                <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl"></div>
+                
+                {scanning && (
+                  <div 
+                    className="absolute left-0 right-0 h-1 bg-primary shadow-[0_0_10px_rgba(33,160,56,0.8)] transition-all duration-100"
+                    style={{ top: `${scanProgress}%` }}
+                  ></div>
+                )}
+
+                <div className="absolute inset-8 bg-white rounded-lg flex items-center justify-center">
+                  <div className="grid grid-cols-8 gap-1 p-4">
+                    {Array.from({ length: 64 }).map((_, i) => (
+                      <div 
+                        key={i} 
+                        className={`w-3 h-3 ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {!scanning && (
+              <div className="absolute inset-0 flex items-center justify-center bg-primary/20 backdrop-blur-sm">
+                <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center animate-scale-in">
+                  <Icon name="CheckCircle2" size={56} className="text-white" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center">
+            <p className="text-lg font-medium mb-2">
+              {scanning ? 'Наведите камеру на QR-код' : 'QR-код распознан!'}
+            </p>
+            <p className="text-muted-foreground">
+              {scanning ? 'Держите телефон ровно для лучшего результата' : 'Переход к оплате...'}
+            </p>
+            {scanning && (
+              <div className="mt-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Icon name="Scan" size={20} className="text-primary animate-pulse" />
+                  <span className="text-sm font-medium text-primary">Сканирование... {scanProgress}%</span>
+                </div>
+                <div className="w-64 h-2 bg-muted rounded-full overflow-hidden mx-auto">
+                  <div 
+                    className="h-full bg-primary transition-all duration-100"
+                    style={{ width: `${scanProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const ProcessingScreen = () => (
     <div className="flex flex-col items-center justify-center h-full animate-fade-in">
       <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-8 animate-pulse">
@@ -277,14 +426,20 @@ const Index = () => {
 
       <div className="flex flex-col gap-4 w-full max-w-md">
         <Button 
-          onClick={handleNewPayment}
+          onClick={() => {
+            playSound('click');
+            handleNewPayment();
+          }}
           className="h-16 text-xl font-medium bg-primary hover:bg-primary/90"
         >
           <Icon name="Plus" size={24} className="mr-2" />
           Новая оплата
         </Button>
         <Button 
-          onClick={() => setCurrentScreen('welcome')}
+          onClick={() => {
+            playSound('click');
+            setCurrentScreen('welcome');
+          }}
           className="h-16 text-xl font-medium"
           variant="outline"
         >
@@ -357,6 +512,7 @@ const Index = () => {
     welcome: <WelcomeScreen />,
     amount: <AmountScreen />,
     payment: <PaymentMethodScreen />,
+    'qr-scan': <QRScanScreen />,
     processing: <ProcessingScreen />,
     success: <SuccessScreen />,
     history: <HistoryScreen />
