@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-type Screen = 'welcome' | 'amount' | 'payment' | 'qr-scan' | 'processing' | 'success' | 'history';
+type Screen = 'welcome' | 'amount' | 'payment' | 'pin' | 'qr-scan' | 'processing' | 'success' | 'history' | 'cancel';
 
 interface Transaction {
   id: string;
@@ -17,6 +17,7 @@ const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
   const [amount, setAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [pin, setPin] = useState<string>('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const playSound = (type: 'click' | 'success' | 'error') => {
@@ -67,6 +68,10 @@ const Index = () => {
       setCurrentScreen('qr-scan');
       return;
     }
+    if (method === 'Банковская карта') {
+      setCurrentScreen('pin');
+      return;
+    }
     setCurrentScreen('processing');
     
     setTimeout(() => {
@@ -85,7 +90,13 @@ const Index = () => {
   const handleNewPayment = () => {
     setAmount('');
     setPaymentMethod('');
+    setPin('');
     setCurrentScreen('amount');
+  };
+
+  const handleCancel = () => {
+    playSound('error');
+    setCurrentScreen('cancel');
   };
 
   const WelcomeScreen = () => (
@@ -139,16 +150,32 @@ const Index = () => {
     </div>
   );
 
-  const AmountScreen = () => (
-    <div className="flex flex-col h-full animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
-        <Button variant="ghost" onClick={() => setCurrentScreen('welcome')} className="text-lg">
-          <Icon name="ArrowLeft" size={24} className="mr-2" />
-          Назад
-        </Button>
-        <h2 className="text-2xl font-bold">Введите сумму</h2>
-        <div className="w-24"></div>
-      </div>
+  const AmountScreen = () => {
+    useEffect(() => {
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.key === 'Enter' && amount && parseFloat(amount) > 0) {
+          playSound('click');
+          setCurrentScreen('payment');
+        }
+      };
+      
+      window.addEventListener('keypress', handleKeyPress);
+      return () => window.removeEventListener('keypress', handleKeyPress);
+    }, [amount]);
+
+    return (
+      <div className="flex flex-col h-full animate-fade-in">
+        <div className="flex items-center justify-between mb-8">
+          <Button variant="ghost" onClick={() => setCurrentScreen('welcome')} className="text-lg">
+            <Icon name="ArrowLeft" size={24} className="mr-2" />
+            Назад
+          </Button>
+          <h2 className="text-2xl font-bold">Введите сумму</h2>
+          <Button variant="ghost" onClick={handleCancel} className="text-lg text-destructive">
+            <Icon name="XCircle" size={24} className="mr-2" />
+            Отмена
+          </Button>
+        </div>
 
       <Card className="mb-8 p-8 bg-muted/30">
         <div className="text-5xl font-bold text-center mb-2">
@@ -203,7 +230,8 @@ const Index = () => {
         <Icon name="ArrowRight" size={24} className="ml-2" />
       </Button>
     </div>
-  );
+    );
+  };
 
   const PaymentMethodScreen = () => (
     <div className="flex flex-col h-full animate-fade-in">
@@ -213,7 +241,10 @@ const Index = () => {
           Назад
         </Button>
         <h2 className="text-2xl font-bold">Способ оплаты</h2>
-        <div className="w-24"></div>
+        <Button variant="ghost" onClick={handleCancel} className="text-lg text-destructive">
+          <Icon name="XCircle" size={24} className="mr-2" />
+          Отмена
+        </Button>
       </div>
 
       <Card className="mb-8 p-6 bg-primary/5">
@@ -314,7 +345,10 @@ const Index = () => {
             Назад
           </Button>
           <h2 className="text-2xl font-bold">Сканирование QR-кода</h2>
-          <div className="w-24"></div>
+          <Button variant="ghost" onClick={handleCancel} className="text-lg text-destructive">
+            <Icon name="XCircle" size={24} className="mr-2" />
+            Отмена
+          </Button>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center">
@@ -384,6 +418,110 @@ const Index = () => {
     );
   };
 
+  const PinScreen = () => {
+    const [localPin, setLocalPin] = useState('');
+
+    useEffect(() => {
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.key >= '0' && e.key <= '9' && localPin.length < 4) {
+          playSound('click');
+          const newPin = localPin + e.key;
+          setLocalPin(newPin);
+          if (newPin.length === 4) {
+            setTimeout(() => {
+              setPin(newPin);
+              setCurrentScreen('processing');
+            }, 300);
+          }
+        } else if (e.key === 'Backspace') {
+          setLocalPin(localPin.slice(0, -1));
+        }
+      };
+      
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [localPin]);
+
+    const handlePinClick = (num: string) => {
+      if (localPin.length < 4) {
+        playSound('click');
+        const newPin = localPin + num;
+        setLocalPin(newPin);
+        if (newPin.length === 4) {
+          setTimeout(() => {
+            setPin(newPin);
+            setCurrentScreen('processing');
+          }, 300);
+        }
+      }
+    };
+
+    return (
+      <div className="flex flex-col h-full animate-fade-in">
+        <div className="flex items-center justify-between mb-8">
+          <Button variant="ghost" onClick={() => setCurrentScreen('payment')} className="text-lg">
+            <Icon name="ArrowLeft" size={24} className="mr-2" />
+            Назад
+          </Button>
+          <h2 className="text-2xl font-bold">Введите PIN-код</h2>
+          <Button variant="ghost" onClick={handleCancel} className="text-lg text-destructive">
+            <Icon name="XCircle" size={24} className="mr-2" />
+            Отмена
+          </Button>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="mb-8">
+            <Icon name="CreditCard" size={64} className="text-primary" />
+          </div>
+          
+          <h3 className="text-xl font-medium mb-8">Введите PIN-код вашей карты</h3>
+
+          <div className="flex gap-4 mb-12">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`w-16 h-16 rounded-lg border-2 flex items-center justify-center text-3xl font-bold transition-all ${
+                  localPin.length > i
+                    ? 'border-primary bg-primary/10 scale-110'
+                    : 'border-muted bg-muted/30'
+                }`}
+              >
+                {localPin.length > i ? '●' : ''}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 max-w-sm">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', ''].map((num, idx) => (
+              num ? (
+                <Button
+                  key={num}
+                  onClick={() => handlePinClick(num)}
+                  className="h-20 text-3xl font-medium hover:scale-105 transition-transform"
+                  variant="outline"
+                >
+                  {num}
+                </Button>
+              ) : (
+                <div key={idx}></div>
+              )
+            ))}
+          </div>
+
+          <Button
+            onClick={() => setLocalPin('')}
+            className="mt-8 h-14 text-lg"
+            variant="outline"
+          >
+            <Icon name="Delete" size={24} className="mr-2" />
+            Очистить
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   const ProcessingScreen = () => (
     <div className="flex flex-col items-center justify-center h-full animate-fade-in">
       <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-8 animate-pulse">
@@ -423,6 +561,42 @@ const Index = () => {
           </div>
         </div>
       </Card>
+
+      <div className="flex flex-col gap-4 w-full max-w-md">
+        <Button 
+          onClick={() => {
+            playSound('click');
+            handleNewPayment();
+          }}
+          className="h-16 text-xl font-medium bg-primary hover:bg-primary/90"
+        >
+          <Icon name="Plus" size={24} className="mr-2" />
+          Новая оплата
+        </Button>
+        <Button 
+          onClick={() => {
+            playSound('click');
+            setCurrentScreen('welcome');
+          }}
+          className="h-16 text-xl font-medium"
+          variant="outline"
+        >
+          <Icon name="Home" size={24} className="mr-2" />
+          На главную
+        </Button>
+      </div>
+    </div>
+  );
+
+  const CancelScreen = () => (
+    <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+      <div className="w-24 h-24 rounded-full bg-destructive/10 flex items-center justify-center mb-8 animate-scale-in">
+        <Icon name="XCircle" size={56} className="text-destructive" />
+      </div>
+      <h2 className="text-3xl font-bold mb-4 text-destructive">Операция отменена</h2>
+      <p className="text-muted-foreground text-lg text-center max-w-md mb-12">
+        Платёж был отменён по вашему запросу
+      </p>
 
       <div className="flex flex-col gap-4 w-full max-w-md">
         <Button 
@@ -512,9 +686,11 @@ const Index = () => {
     welcome: <WelcomeScreen />,
     amount: <AmountScreen />,
     payment: <PaymentMethodScreen />,
+    pin: <PinScreen />,
     'qr-scan': <QRScanScreen />,
     processing: <ProcessingScreen />,
     success: <SuccessScreen />,
+    cancel: <CancelScreen />,
     history: <HistoryScreen />
   };
 
