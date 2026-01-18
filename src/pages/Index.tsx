@@ -3,7 +3,15 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-type Screen = 'welcome' | 'amount' | 'payment' | 'pin' | 'qr-scan' | 'processing' | 'success' | 'history' | 'cancel';
+type Screen = 'language' | 'welcome' | 'amount' | 'payment' | 'pin' | 'qr-scan' | 'processing' | 'success' | 'history' | 'cancel' | 'print';
+
+type Language = 'ru' | 'en' | 'kk';
+
+interface Translations {
+  ru: { [key: string]: string };
+  en: { [key: string]: string };
+  kk: { [key: string]: string };
+}
 
 interface Transaction {
   id: string;
@@ -14,11 +22,128 @@ interface Transaction {
 }
 
 const Index = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('language');
   const [amount, setAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [pin, setPin] = useState<string>('');
+  const [language, setLanguage] = useState<Language>('ru');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const translations: Translations = {
+    ru: {
+      welcome: 'Добро пожаловать!',
+      selectAction: 'Выберите действие для продолжения работы с терминалом',
+      cardPayment: 'Оплата картой',
+      qrPayment: 'Оплата по QR-коду',
+      history: 'История операций',
+      enterAmount: 'Введите сумму',
+      amountPlaceholder: 'Введите сумму платежа',
+      continue: 'Продолжить',
+      back: 'Назад',
+      cancel: 'Отмена',
+      paymentMethod: 'Способ оплаты',
+      amountToPay: 'Сумма к оплате:',
+      bankCard: 'Банковская карта',
+      bankCardDesc: 'Оплата картой любого банка',
+      qrCode: 'Оплата по QR-коду',
+      qrCodeDesc: 'Быстрая оплата через камеру',
+      sbp: 'Система быстрых платежей',
+      sbpDesc: 'Перевод по номеру телефона',
+      enterPin: 'Введите PIN-код',
+      enterPinDesc: 'Введите PIN-код вашей карты',
+      processing: 'Обработка платежа...',
+      pleaseWait: 'Пожалуйста, подождите. Платёж обрабатывается',
+      success: 'Оплата успешна!',
+      amount: 'Сумма:',
+      date: 'Дата и время:',
+      operationNumber: 'Номер операции:',
+      newPayment: 'Новая оплата',
+      home: 'На главную',
+      operationCancelled: 'Операция отменена',
+      cancelledDesc: 'Платёж был отменён по вашему запросу',
+      historyEmpty: 'История пуста',
+      historyEmptyDesc: 'Здесь будут отображаться все ваши операции',
+      createPayment: 'Создать платёж',
+      printReceipt: 'Напечатать чек',
+      selectLanguage: 'Выберите язык / Select language / Тілді таңдаңыз'
+    },
+    en: {
+      welcome: 'Welcome!',
+      selectAction: 'Select an action to continue',
+      cardPayment: 'Card payment',
+      qrPayment: 'QR code payment',
+      history: 'Transaction history',
+      enterAmount: 'Enter amount',
+      amountPlaceholder: 'Enter payment amount',
+      continue: 'Continue',
+      back: 'Back',
+      cancel: 'Cancel',
+      paymentMethod: 'Payment method',
+      amountToPay: 'Amount to pay:',
+      bankCard: 'Bank card',
+      bankCardDesc: 'Payment with any bank card',
+      qrCode: 'QR code payment',
+      qrCodeDesc: 'Fast payment via camera',
+      sbp: 'Fast payment system',
+      sbpDesc: 'Transfer by phone number',
+      enterPin: 'Enter PIN code',
+      enterPinDesc: 'Enter your card PIN code',
+      processing: 'Processing payment...',
+      pleaseWait: 'Please wait. Payment is being processed',
+      success: 'Payment successful!',
+      amount: 'Amount:',
+      date: 'Date and time:',
+      operationNumber: 'Operation number:',
+      newPayment: 'New payment',
+      home: 'Home',
+      operationCancelled: 'Operation cancelled',
+      cancelledDesc: 'Payment was cancelled by your request',
+      historyEmpty: 'History is empty',
+      historyEmptyDesc: 'All your transactions will be displayed here',
+      createPayment: 'Create payment',
+      printReceipt: 'Print receipt',
+      selectLanguage: 'Выберите язык / Select language / Тілді таңдаңыз'
+    },
+    kk: {
+      welcome: 'Қош келдіңіз!',
+      selectAction: 'Жалғастыру үшін әрекетті таңдаңыз',
+      cardPayment: 'Картамен төлем',
+      qrPayment: 'QR коды арқылы төлем',
+      history: 'Транзакциялар тарихы',
+      enterAmount: 'Сомасын енгізіңіз',
+      amountPlaceholder: 'Төлем сомасын енгізіңіз',
+      continue: 'Жалғастыру',
+      back: 'Артқа',
+      cancel: 'Болдырмау',
+      paymentMethod: 'Төлем әдісі',
+      amountToPay: 'Төлем сомасы:',
+      bankCard: 'Банк картасы',
+      bankCardDesc: 'Кез келген банк картасымен төлем',
+      qrCode: 'QR коды арқылы төлем',
+      qrCodeDesc: 'Камера арқылы жылдам төлем',
+      sbp: 'Жылдам төлем жүйесі',
+      sbpDesc: 'Телефон нөмірі бойынша аудару',
+      enterPin: 'PIN кодын енгізіңіз',
+      enterPinDesc: 'Картаңыздың PIN кодын енгізіңіз',
+      processing: 'Төлем өңделуде...',
+      pleaseWait: 'Күте тұрыңыз. Төлем өңделуде',
+      success: 'Төлем сәтті өтті!',
+      amount: 'Сома:',
+      date: 'Күні мен уақыты:',
+      operationNumber: 'Операция нөмірі:',
+      newPayment: 'Жаңа төлем',
+      home: 'Басты бет',
+      operationCancelled: 'Операция болдырылмады',
+      cancelledDesc: 'Төлем сіздің сұранысыңыз бойынша болдырылмады',
+      historyEmpty: 'Тарих бос',
+      historyEmptyDesc: 'Барлық транзакцияларыңыз осында көрсетіледі',
+      createPayment: 'Төлем жасау',
+      printReceipt: 'Чекті басып шығару',
+      selectLanguage: 'Выберите язык / Select language / Тілді таңдаңыз'
+    }
+  };
+
+  const t = (key: string) => translations[language][key] || key;
 
   const playSound = (type: 'click' | 'success' | 'error') => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -99,6 +224,57 @@ const Index = () => {
     setCurrentScreen('cancel');
   };
 
+  const LanguageScreen = () => (
+    <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+      <div className="mb-12">
+        <svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="200" height="80" rx="8" fill="#21A038"/>
+          <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="28" fontWeight="700" fontFamily="Roboto">
+            СБЕРБАНК
+          </text>
+        </svg>
+      </div>
+      <h1 className="text-3xl font-bold mb-4 text-center">{t('selectLanguage')}</h1>
+      <div className="flex flex-col gap-4 w-full max-w-md mt-8">
+        <Button 
+          onClick={() => {
+            playSound('click');
+            setLanguage('ru');
+            setCurrentScreen('welcome');
+          }} 
+          className="h-20 text-xl font-medium bg-primary hover:bg-primary/90"
+        >
+          <Icon name="Globe" size={28} className="mr-3" />
+          Русский
+        </Button>
+        <Button 
+          onClick={() => {
+            playSound('click');
+            setLanguage('en');
+            setCurrentScreen('welcome');
+          }} 
+          className="h-20 text-xl font-medium"
+          variant="outline"
+        >
+          <Icon name="Globe" size={28} className="mr-3" />
+          English
+        </Button>
+        <Button 
+          onClick={() => {
+            playSound('click');
+            setLanguage('kk');
+            setCurrentScreen('welcome');
+          }} 
+          className="h-20 text-xl font-medium"
+          variant="outline"
+        >
+          <Icon name="Globe" size={28} className="mr-3" />
+          Қазақша
+        </Button>
+      </div>
+    </div>
+  );
+
   const WelcomeScreen = () => (
     <div className="flex flex-col items-center justify-center h-full animate-fade-in">
       <div className="mb-12">
@@ -109,9 +285,9 @@ const Index = () => {
           </text>
         </svg>
       </div>
-      <h1 className="text-3xl font-bold mb-4 text-center">Добро пожаловать!</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">{t('welcome')}</h1>
       <p className="text-muted-foreground text-lg mb-12 text-center max-w-md">
-        Выберите действие для продолжения работы с терминалом
+        {t('selectAction')}
       </p>
       <div className="flex flex-col gap-4 w-full max-w-md">
         <Button 
@@ -122,7 +298,7 @@ const Index = () => {
           className="h-20 text-xl font-medium bg-primary hover:bg-primary/90"
         >
           <Icon name="CreditCard" size={28} className="mr-3" />
-          Оплата картой
+          {t('cardPayment')}
         </Button>
         <Button 
           onClick={() => {
@@ -133,7 +309,7 @@ const Index = () => {
           variant="outline"
         >
           <Icon name="QrCode" size={28} className="mr-3" />
-          Оплата по QR-коду
+          {t('qrPayment')}
         </Button>
         <Button 
           onClick={() => {
@@ -144,7 +320,7 @@ const Index = () => {
           variant="outline"
         >
           <Icon name="History" size={28} className="mr-3" />
-          История операций
+          {t('history')}
         </Button>
       </div>
     </div>
@@ -168,12 +344,12 @@ const Index = () => {
         <div className="flex items-center justify-between mb-8">
           <Button variant="ghost" onClick={() => setCurrentScreen('welcome')} className="text-lg">
             <Icon name="ArrowLeft" size={24} className="mr-2" />
-            Назад
+            {t('back')}
           </Button>
-          <h2 className="text-2xl font-bold">Введите сумму</h2>
+          <h2 className="text-2xl font-bold">{t('enterAmount')}</h2>
           <Button variant="ghost" onClick={handleCancel} className="text-lg text-destructive">
             <Icon name="XCircle" size={24} className="mr-2" />
-            Отмена
+            {t('cancel')}
           </Button>
         </div>
 
@@ -181,7 +357,7 @@ const Index = () => {
         <div className="text-5xl font-bold text-center mb-2">
           {amount || '0'} ₽
         </div>
-        <p className="text-center text-muted-foreground">Введите сумму платежа</p>
+        <p className="text-center text-muted-foreground">{t('amountPlaceholder')}</p>
       </Card>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -226,7 +402,7 @@ const Index = () => {
         disabled={!amount || parseFloat(amount) <= 0}
         className="h-16 text-xl font-medium bg-primary hover:bg-primary/90"
       >
-        Продолжить
+        {t('continue')}
         <Icon name="ArrowRight" size={24} className="ml-2" />
       </Button>
     </div>
@@ -265,8 +441,8 @@ const Index = () => {
                 <Icon name="CreditCard" size={28} className="text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-1">Банковская карта</h3>
-                <p className="text-muted-foreground">Оплата картой любого банка</p>
+                <h3 className="text-xl font-semibold mb-1">{t('bankCard')}</h3>
+                <p className="text-muted-foreground">{t('bankCardDesc')}</p>
               </div>
             </div>
             <Icon name="ChevronRight" size={28} className="text-muted-foreground" />
@@ -283,8 +459,8 @@ const Index = () => {
                 <Icon name="QrCode" size={28} className="text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-1">Оплата по QR-коду</h3>
-                <p className="text-muted-foreground">Быстрая оплата через камеру</p>
+                <h3 className="text-xl font-semibold mb-1">{t('qrCode')}</h3>
+                <p className="text-muted-foreground">{t('qrCodeDesc')}</p>
               </div>
             </div>
             <Icon name="ChevronRight" size={28} className="text-muted-foreground" />
@@ -534,6 +710,82 @@ const Index = () => {
     </div>
   );
 
+  const PrintScreen = () => {
+    const [printing, setPrinting] = useState(true);
+    const [printProgress, setPrintProgress] = useState(0);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setPrintProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            playSound('success');
+            setPrinting(false);
+            setTimeout(() => {
+              setCurrentScreen('success');
+            }, 1500);
+            return 100;
+          }
+          return prev + 5;
+        });
+      }, 100);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+        <div className="mb-8 relative">
+          <div className="w-64 h-96 bg-white border-4 border-gray-300 rounded-lg shadow-xl relative overflow-hidden">
+            <div 
+              className="absolute bottom-0 left-0 right-0 bg-gray-100 transition-all duration-100"
+              style={{ height: `${printProgress}%` }}
+            >
+              <div className="p-4 text-xs font-mono space-y-1">
+                <div className="text-center font-bold border-b-2 border-dashed border-gray-400 pb-2 mb-2">
+                  СБЕРБАНК
+                </div>
+                <div>Сумма: {amount} ₽</div>
+                <div>Способ: {paymentMethod}</div>
+                <div className="text-[10px]">Дата: {new Date().toLocaleString('ru-RU')}</div>
+                <div className="text-[10px]">№ {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                <div className="border-t-2 border-dashed border-gray-400 pt-2 mt-2 text-center">
+                  СПАСИБО!
+                </div>
+              </div>
+            </div>
+          </div>
+          {printing && (
+            <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
+              <Icon name="Printer" size={48} className="text-primary animate-pulse" />
+            </div>
+          )}
+        </div>
+        
+        <h2 className="text-2xl font-bold mb-2">
+          {printing ? 'Печать чека...' : 'Чек напечатан!'}
+        </h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          {printing ? 'Пожалуйста, подождите' : 'Заберите чек из терминала'}
+        </p>
+        
+        {printing && (
+          <div className="mt-6 w-64">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-sm font-medium text-primary">{printProgress}%</span>
+            </div>
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-100"
+                style={{ width: `${printProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const SuccessScreen = () => (
     <div className="flex flex-col items-center justify-center h-full animate-fade-in">
       <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-8 animate-scale-in">
@@ -566,12 +818,23 @@ const Index = () => {
         <Button 
           onClick={() => {
             playSound('click');
-            handleNewPayment();
+            setCurrentScreen('print');
           }}
           className="h-16 text-xl font-medium bg-primary hover:bg-primary/90"
         >
+          <Icon name="Printer" size={24} className="mr-2" />
+          {t('printReceipt')}
+        </Button>
+        <Button 
+          onClick={() => {
+            playSound('click');
+            handleNewPayment();
+          }}
+          className="h-16 text-xl font-medium"
+          variant="outline"
+        >
           <Icon name="Plus" size={24} className="mr-2" />
-          Новая оплата
+          {t('newPayment')}
         </Button>
         <Button 
           onClick={() => {
@@ -582,7 +845,7 @@ const Index = () => {
           variant="outline"
         >
           <Icon name="Home" size={24} className="mr-2" />
-          На главную
+          {t('home')}
         </Button>
       </div>
     </div>
@@ -683,12 +946,14 @@ const Index = () => {
   );
 
   const screens = {
+    language: <LanguageScreen />,
     welcome: <WelcomeScreen />,
     amount: <AmountScreen />,
     payment: <PaymentMethodScreen />,
     pin: <PinScreen />,
     'qr-scan': <QRScanScreen />,
     processing: <ProcessingScreen />,
+    print: <PrintScreen />,
     success: <SuccessScreen />,
     cancel: <CancelScreen />,
     history: <HistoryScreen />
